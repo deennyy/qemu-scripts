@@ -2,14 +2,11 @@
 # Helpful to read output when debugging
 set -x
 
-ivpn disconnect
-killall kwin_x11
-
 # Load the config file with our environmental variables
 source "/etc/libvirt/hooks/kvm.conf"
 
 # Stop your display manager. If you're on kde it'll be sddm.service. Gnome users should use 'killall gdm-x-session' instead
-systemctl stop sddm.service
+systemctl stop lightdm
 
 # Unbind VTconsoles
 echo 0 > /sys/class/vtconsole/vtcon1/bind
@@ -20,7 +17,7 @@ echo 0 > /sys/class/vtconsole/vtcon0/bind
 echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind
 
 # Avoid a race condition by waiting a couple of seconds. This can be calibrated to be shorter or longer if required for your system
-sleep 1
+sleep 10
 
 # Unload all Nvidia drivers
 modprobe -r nvidia_drm
