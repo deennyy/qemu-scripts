@@ -31,4 +31,4 @@ modprobe drm
 
 systemctl start lightdm
 
-eval $(/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh) &
+[ -z "$(pidof gnome-keyring-daemon)" ] && eval $(/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh) &
