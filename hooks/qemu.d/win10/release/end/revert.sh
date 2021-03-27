@@ -15,7 +15,6 @@ virsh nodedev-reattach $VIRSH_GPU_AUDIO
 
 # Rebind VT consoles
 echo 1 > /sys/class/vtconsole/vtcon0/bind
-# echo 0 > /sys/class/vtconsole/vtcon0/bind
 
 # Read our nvidia configuration when before starting our graphics
 nvidia-xconfig --query-gpu-info > /dev/null 2>&1
@@ -30,5 +29,6 @@ modprobe drm_kms_helper
 modprobe nvidia
 modprobe drm
 
-# Restart Display Manager
-systemctl start sddm.service
+systemctl start lightdm
+
+eval $(/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh) &
