@@ -5,9 +5,9 @@ OVERWRITTEN AND LOST. Changes to this xml configuration should be made using:
 or other application using the libvirt API.
 -->
 
-<domain type='kvm'>
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <name>win10</name>
-  <uuid>66de00d4-593d-4eca-9414-5f3a81a7e8e1</uuid>
+  <uuid>99ad2dca-5044-40ac-ad14-e3313ee33808</uuid>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://microsoft.com/win/10"/>
@@ -19,22 +19,25 @@ or other application using the libvirt API.
     <hugepages/>
   </memoryBacking>
   <vcpu placement='static'>10</vcpu>
+  <iothreads>2</iothreads>
   <cputune>
-    <vcpupin vcpu='0' cpuset='0'/>
-    <vcpupin vcpu='1' cpuset='6'/>
-    <vcpupin vcpu='2' cpuset='1'/>
-    <vcpupin vcpu='3' cpuset='7'/>
-    <vcpupin vcpu='4' cpuset='2'/>
-    <vcpupin vcpu='5' cpuset='8'/>
-    <vcpupin vcpu='6' cpuset='3'/>
-    <vcpupin vcpu='7' cpuset='9'/>
-    <vcpupin vcpu='8' cpuset='4'/>
-    <vcpupin vcpu='9' cpuset='10'/>
-    <emulatorpin cpuset='5-11'/>
+    <vcpupin vcpu='0' cpuset='1'/>
+    <vcpupin vcpu='1' cpuset='7'/>
+    <vcpupin vcpu='2' cpuset='2'/>
+    <vcpupin vcpu='3' cpuset='8'/>
+    <vcpupin vcpu='4' cpuset='3'/>
+    <vcpupin vcpu='5' cpuset='9'/>
+    <vcpupin vcpu='6' cpuset='4'/>
+    <vcpupin vcpu='7' cpuset='10'/>
+    <vcpupin vcpu='8' cpuset='5'/>
+    <vcpupin vcpu='9' cpuset='11'/>
+    <emulatorpin cpuset='0-6'/>
+    <iothreadpin iothread='1' cpuset='0'/>
+    <iothreadpin iothread='2' cpuset='6'/>
   </cputune>
   <os>
     <type arch='x86_64' machine='pc-q35-5.2'>hvm</type>
-    <loader readonly='yes' type='pflash'>/usr/share/edk2-ovmf/x64/OVMF_CODE.fd</loader>
+    <loader readonly='yes' secure='yes' type='pflash'>/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd</loader>
     <nvram>/var/lib/libvirt/qemu/nvram/win10_VARS.fd</nvram>
   </os>
   <features>
@@ -45,6 +48,7 @@ or other application using the libvirt API.
       <vapic state='on'/>
       <spinlocks state='on' retries='8191'/>
       <vpindex state='on'/>
+      <runtime state='on'/>
       <synic state='on'/>
       <stimer state='on'/>
       <reset state='on'/>
@@ -55,17 +59,20 @@ or other application using the libvirt API.
       <hidden state='on'/>
     </kvm>
     <vmport state='off'/>
+    <smm state='on'/>
     <ioapic driver='kvm'/>
   </features>
-  <cpu mode='host-passthrough' check='none' migratable='on'>
+  <cpu mode='host-passthrough' check='partial' migratable='on'>
     <topology sockets='1' dies='1' cores='5' threads='2'/>
     <cache mode='passthrough'/>
     <feature policy='require' name='topoext'/>
+    <feature policy='require' name='invtsc'/>
   </cpu>
   <clock offset='utc'>
-    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='rtc' tickpolicy='catchup' track='guest'/>
     <timer name='pit' tickpolicy='delay'/>
     <timer name='hpet' present='no'/>
+    <timer name='tsc' present='yes' mode='native'/>
     <timer name='hypervclock' present='yes'/>
   </clock>
   <on_poweroff>destroy</on_poweroff>
@@ -77,17 +84,17 @@ or other application using the libvirt API.
   </pm>
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
-    <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source dev='/dev/disk/by-partuuid/b6f3d4d0-a3f5-4bae-ae50-498365f6ed45'/>
-      <target dev='vdb' bus='virtio'/>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native' discard='unmap' iothread='1' queues='8'/>
+      <source file='/var/lib/libvirt/images/win10.raw'/>
+      <target dev='vda' bus='virtio'/>
       <boot order='1'/>
       <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
     </disk>
-    <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source dev='/dev/disk/by-partuuid/568d0954-fd00-4998-8600-4555edf4ac5a'/>
-      <target dev='vdc' bus='virtio'/>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native' discard='unmap' iothread='2' queues='8'/>
+      <source file='/home/denny/.win10D.raw'/>
+      <target dev='vdb' bus='virtio'/>
       <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
     </disk>
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
@@ -131,32 +138,44 @@ or other application using the libvirt API.
     </controller>
     <controller type='pci' index='8' model='pcie-root-port'>
       <model name='pcie-root-port'/>
-      <target chassis='8' port='0x17'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>
+      <target chassis='8' port='0x8'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0' multifunction='on'/>
+    </controller>
+    <controller type='pci' index='9' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='9' port='0x9'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
     </controller>
     <controller type='sata' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>
     </controller>
     <interface type='network'>
-      <mac address='52:54:00:d1:77:e7'/>
+      <mac address='52:54:00:15:fa:87'/>
       <source network='default'/>
-      <model type='e1000e'/>
+      <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </interface>
+    <input type='mouse' bus='virtio'>
+      <address type='pci' domain='0x0000' bus='0x08' slot='0x00' function='0x0'/>
+    </input>
+    <input type='keyboard' bus='virtio'>
+      <address type='pci' domain='0x0000' bus='0x09' slot='0x00' function='0x0'/>
+    </input>
     <input type='mouse' bus='ps2'/>
     <input type='keyboard' bus='ps2'/>
     <hostdev mode='subsystem' type='pci' managed='yes'>
       <source>
         <address domain='0x0000' bus='0x08' slot='0x00' function='0x0'/>
       </source>
-      <rom file='/home/denny/patched.rom'/>
-      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
+      <rom file='/home/denny/.patched.rom'/>
+      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>
     </hostdev>
     <hostdev mode='subsystem' type='pci' managed='yes'>
       <source>
         <address domain='0x0000' bus='0x08' slot='0x00' function='0x1'/>
       </source>
-      <address type='pci' domain='0x0000' bus='0x08' slot='0x00' function='0x0'/>
+      <rom file='/home/denny/.patched.rom'/>
+      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
     </hostdev>
     <hostdev mode='subsystem' type='usb' managed='yes'>
       <source>
@@ -165,22 +184,14 @@ or other application using the libvirt API.
       </source>
       <address type='usb' bus='0' port='1'/>
     </hostdev>
-    <hostdev mode='subsystem' type='usb' managed='yes'>
-      <source>
-        <vendor id='0x046d'/>
-        <product id='0xc083'/>
-      </source>
-      <address type='usb' bus='0' port='2'/>
-    </hostdev>
-    <hostdev mode='subsystem' type='usb' managed='yes'>
-      <source>
-        <vendor id='0x0951'/>
-        <product id='0x16b7'/>
-      </source>
-      <address type='usb' bus='0' port='3'/>
-    </hostdev>
     <memballoon model='virtio'>
       <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
     </memballoon>
   </devices>
+  <qemu:commandline>
+    <qemu:arg value='-object'/>
+    <qemu:arg value='input-linux,id=mouse1,evdev=/dev/input/by-id/usb-Logitech_G102_LIGHTSYNC_Gaming_Mouse_204F32625542-event-mouse'/>
+    <qemu:arg value='-object'/>
+    <qemu:arg value='input-linux,id=kbd1,evdev=/dev/input/by-id/usb-Kingston_HyperX_Alloy_FPS_Mechanical_Gaming_Keyboard-event-kbd,grab_all=on,repeat=on'/>
+  </qemu:commandline>
 </domain>
