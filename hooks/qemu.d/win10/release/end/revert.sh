@@ -15,7 +15,6 @@ virsh nodedev-reattach $VIRSH_GPU_AUDIO
 
 # Rebind VT consoles
 echo 1 > /sys/class/vtconsole/vtcon0/bind
-echo 1 > /sys/class/vtconsole/vtcon1/bind
 
 # Read our nvidia configuration when before starting our graphics
 nvidia-xconfig --query-gpu-info > /dev/null 2>&1
