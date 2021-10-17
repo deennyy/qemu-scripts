@@ -15,6 +15,7 @@ virsh nodedev-reattach $VIRSH_GPU_AUDIO
 
 # Rebind VT consoles
 echo 1 > /sys/class/vtconsole/vtcon0/bind
+echo 1 > /sys/class/vtconsole/vtcon1/bind
 
 # Read our nvidia configuration when before starting our graphics
 nvidia-xconfig --query-gpu-info > /dev/null 2>&1
@@ -28,5 +29,8 @@ modprobe nvidia_modeset
 modprobe drm_kms_helper
 modprobe nvidia
 modprobe drm
+modprobe nvidia_uvm
+
+mount -a
 
 systemctl start lightdm
