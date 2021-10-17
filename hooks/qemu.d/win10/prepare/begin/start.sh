@@ -5,6 +5,8 @@ set -x
 # Load the config file with our environmental variables
 source "/etc/libvirt/hooks/kvm.conf"
 
+umount /mnt/hdd
+
 # Stop your display manager. If you're on kde it'll be sddm.service. Gnome users should use 'killall gdm-x-session' instead
 systemctl stop lightdm
 
@@ -23,6 +25,7 @@ sleep 10
 modprobe -r nvidia_drm
 modprobe -r nvidia_modeset
 modprobe -r drm_kms_helper
+modprobe -r nvidia_uvm
 modprobe -r nvidia
 modprobe -r drm
 

@@ -20,7 +20,6 @@ done
 
 if [ "$ALLOC_PAGES" -ne "$HUGEPAGES" ]
 then
-    echo "Not able to allocate all hugepages. Reverting..."
     echo 0 > /proc/sys/vm/nr_hugepages
     exit 1
 fi
